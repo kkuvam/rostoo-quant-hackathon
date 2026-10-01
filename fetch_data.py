@@ -16,7 +16,7 @@ import argparse
 import io
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -26,6 +26,7 @@ import yaml
 HERE = Path(__file__).resolve().parent
 DATA_DIR = HERE / "data"
 BASE_URL = "https://data.binance.vision/data/spot"
+FUNDING_URL = "https://fapi.binance.com/fapi/v1/fundingRate"
 COLUMNS = ["timestamp", "open", "high", "low", "close", "volume"]
 
 
@@ -66,7 +67,7 @@ def fetch_symbol(sym: str, tf: str, since: date, workers: int) -> Path:
     start = since
     if old is not None and len(old):
         start = pd.to_datetime(old["timestamp"].iloc[-1], unit="ms").date().replace(day=1)
-    urls = archive_urls(pair, tf, start, date.today())
+    urls = archive_urls(pair, tf, start, datetime.now(UTC).date())
     with ThreadPoolExecutor(workers) as pool:
         frames = [f for f in pool.map(download_csv, urls) if f is not None]
     if not frames and old is None:
@@ -83,6 +84,31 @@ def fetch_symbol(sym: str, tf: str, since: date, workers: int) -> Path:
     return out
 
 
+def fetch_funding(sym: str, since: date) -> Path:
+    """Perpetual funding rate history (Binance USD-M futures, public endpoint, full refetch)."""
+    pair = f"{sym}USDT"
+    start = int(datetime(since.year, since.month, since.day, tzinfo=UTC).timestamp() * 1000)
+    rows = []
+    while True:
+        res = requests.get(FUNDING_URL, params={"symbol": pair, "startTime": start, "limit": 1000},
+                           timeout=60)
+        res.raise_for_status()
+        batch = res.json()
+        rows += batch
+        if len(batch) < 1000:
+            break
+        start = batch[-1]["fundingTime"] + 1
+    if not rows:
+        raise RuntimeError(f"No funding history for {pair} since {since} at {FUNDING_URL}")
+    df = pd.DataFrame({"timestamp": [r["fundingTime"] for r in rows],
+                       "rate": [float(r["fundingRate"]) for r in rows]})
+    out = DATA_DIR / "funding" / f"{pair}.parquet"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    df.to_parquet(out, index=False)
+    print(f"{pair} funding: {len(df):,} rows")
+    return out
+
+
 def main() -> None:
     cfg = yaml.safe_load((HERE / "config.yaml").read_text())
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -90,9 +116,14 @@ def main() -> None:
     p.add_argument("--symbols", nargs="+", default=cfg["symbols"], help="base coins, e.g. BTC ETH")
     p.add_argument("--since", default="2024-01-01", help="ISO date for a cold start")
     p.add_argument("--workers", type=int, default=8, help="parallel downloads per symbol")
+    p.add_argument("--funding", action="store_true", help="fetch perp funding rates instead")
     args = p.parse_args()
+    since = date.fromisoformat(args.since)
     for sym in args.symbols:
-        fetch_symbol(sym, args.timeframe, date.fromisoformat(args.since), args.workers)
+        if args.funding:
+            fetch_funding(sym, since)
+        else:
+            fetch_symbol(sym, args.timeframe, since, args.workers)
 
 
 if __name__ == "__main__":

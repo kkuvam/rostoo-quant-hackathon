@@ -13,12 +13,11 @@ basis is unknown (daily or hourly returns), so both are reported.
 import itertools
 from pathlib import Path
 
+import logic  # this folder's logic.py (the script's own dir is on sys.path)
 import numpy as np
 import pandas as pd
 import yaml
 from tabulate import tabulate
-
-import logic  # this folder's logic.py (the script's own dir is on sys.path)
 
 HERE = Path(__file__).resolve().parent
 DATA_DIR = HERE / "data"
@@ -42,8 +41,9 @@ def load_closes(cfg: dict) -> pd.DataFrame:
     return close.reindex(full)
 
 
-def simulate(close: pd.DataFrame, p: dict, cost: float) -> dict:
-    targets = logic.target_weights(close, p).to_numpy()
+def simulate(close: pd.DataFrame, weights: pd.DataFrame, p: dict, cost: float) -> dict:
+    """Hold `weights` row t from bar t+1, trading only on rebalance hours."""
+    targets = weights.reindex(columns=close.columns).fillna(0.0).to_numpy()
     rets = close.pct_change(fill_method=None).fillna(0.0).to_numpy()
     rebalance = (close.index.hour % p["rebalance_hours"] == 0)
     n, m = rets.shape
@@ -111,6 +111,7 @@ def summarize(sim: dict, start: str | None, end: str | None, days: int) -> dict:
         "turnover_yr": sim["turnover"].loc[lo:hi].sum() / years,
         "avg_gross": sim["held"].loc[lo:hi].abs().sum(axis=1).mean(),
         "med_ret": w["ret"].median(), "p10_ret": w["ret"].quantile(0.1),
+        "pct_pos": (w["ret"] > 0).mean(),
         "med_mdd": w["mdd"].median(), "worst_mdd": w["mdd"].max(),
         "med_comp_d": w["comp_d"].median(), "med_comp_h": w["comp_h"].median(),
         "pct_10days": (w["trade_days"] >= 10).mean(), "pct_short": w["has_short"].mean(),
@@ -136,7 +137,7 @@ def run_grid(close: pd.DataFrame, cfg: dict) -> pd.DataFrame:
     rows = []
     for values in itertools.product(*(cfg["grid"][k] for k in keys)):
         p = {**cfg["params"], **dict(zip(keys, values))}
-        sim = simulate(close, p, cost)
+        sim = simulate(close, logic.target_weights(close, p), p, cost)
         tag = {k: str(v) for k, v in zip(keys, values)}
         ins = summarize(sim, None, cfg["oos_start"], cfg["window_days"])
         oos = summarize(sim, cfg["oos_start"], None, cfg["window_days"])

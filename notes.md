@@ -63,3 +63,35 @@ to slightly negative. The edge comes from a few strong trend months
 (positive skew). On one 14-day draw the most likely outcome is roughly
 flat, which will not pass the top-20 return gate unless the market trends
 during the contest. Buy-and-hold beat it on composite in both periods.
+
+## Candidate comparison (2026-10-01, compare.py, candidates.py)
+Same simulator and 14-day scoring, daily rebalance, 0.13%/side, no dd brake.
+Median daily-basis composite, in-sample (to 2026-03-31) / out-of-sample:
+- ew_hold (benchmark, always long all coins): -0.09 / +3.77
+- trend (logic.py, 7/14/30d): -1.15 / -0.96
+- vol_beta (basket long/short on 7d EMA, vol-targeted): best +1.65 / -5.58 (fails OOS)
+- xs_momentum (top/bottom k by 3-7d return, regime side): best +0.36 / -1.16
+- xs_reversal (buy 1-3d losers in up regime): all < -4 IS
+- donchian (7d/20d breakout per coin): best IS -1.29 (20d L/S), OOS +3.36: inconsistent
+- zscore_mr (fade 1-3d z-score, 4h rebalance): all negative, turnover kills it
+- **funding_contra** (per coin, long-only, lean against 3-day avg perp funding,
+  neutral 0.01%/8h, full position 0.01% below it): **+2.68 / +4.07**,
+  positive in 56% / 62% of windows, median MDD 5.6% / 4.9%, 89% / 100% of
+  windows trade on >= 10 days. The long/short version: +1.49 / +4.07, but its
+  shorts lose (IS total -29%).
+- funding_basket (whole basket against market-average funding): +2.50 / +5.02,
+  but trades on >= 10 days in only 17% / 31% of windows (fails the log check).
+
+Robustness of funding_contra (long-only), 18 neighbours (funding window
+48/72/120h x neutral 0.005%/0.01% x scale 0.005-0.02%), median composite
+by year: 2024 +5.4 to +10.7 (EW hold +2.3), 2025 -1.0 to +1.4 (EW hold -1.7),
+2026 +0.5 to +5.6 (EW hold +0.9). Beats EW hold in nearly every cell and
+year. It is smarter beta, not a hedge: 2025 total -6% vs EW hold -25%.
+
+Blend funding_contra + trend sleeve (to show shorts): every blend scores
+lower. 80/20: IS +1.18 / OOS +3.29, shorts in 68% / 23% of windows.
+
+Open question for the contest: the rules list "long, sell, short, and
+close". If shorts are mandatory, use the 80/20 blend; if not, pure funding.
+Funding data: `fetch_data.py --funding` (Binance USD-M public endpoint).
+The live bot must pull funding from Binance too (Roostoo has none).
