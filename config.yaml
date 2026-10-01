@@ -1,0 +1,39 @@
+strategy_name: roostoo_trend
+
+# Binance USDT pairs that Roostoo lists as /USD (prices match Binance within
+# ~2 bps, checked live 2026-10-01). TON is listed on Roostoo but has no ticker.
+symbols: [BTC, ETH, SOL, XRP, BNB, DOGE, ADA, AVAX, LINK, SUI, NEAR, UNI,
+          LTC, DOT, TRX, ZEC, ENA, WLD, AAVE, HBAR, XLM]
+timeframe: 1h
+# Data root override: env var QUANT_DATA_ROOT, else common.data's default.
+
+# Train on everything before this date, report it separately as out-of-sample.
+oos_start: "2026-04-01"
+window_days: 14          # contest length (Oct 4 - Oct 17)
+initial_cash: 100000
+
+# Costs: Roostoo taker 0.1%, shorts 0.1% even as limit orders. Assume taker
+# everywhere, plus a slippage buffer (spreads measured < 2 bps on these pairs).
+fee: 0.001
+slippage: 0.0003
+
+# Defaults (the chosen parameter set). The sweep grid overrides these keys.
+params:
+  lookbacks: [168, 336, 720]
+  vol_window: 168
+  z_scale: 1.0
+  min_score: 0.0
+  vol_ref: 0.6           # coins above 60% annualized vol get a smaller slot
+  max_gross: 0.95
+  rebalance_hours: 24
+  band: 0.01             # skip a coin's trade if |target - held| < band
+  dd_limit: 0.04         # 0 disables the drawdown brake
+  dd_factor: 0.5
+  dd_peak_hours: 168
+  long_only: false
+
+# Sweep 2 (after sweep 1's 1-14 day lookbacks lost to costs, see notes.md).
+grid:
+  lookbacks: [[168, 336, 720], [336, 720]]
+  band: [0.01, 0.02]
+  dd_limit: [0.0, 0.04]
