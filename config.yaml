@@ -12,10 +12,14 @@ oos_start: "2026-04-01"
 window_days: 14          # contest length (Oct 4 - Oct 17)
 initial_cash: 100000
 
-# Costs: Roostoo taker 0.1%, shorts 0.1% even as limit orders. Assume taker
-# everywhere, plus a slippage buffer (spreads measured < 2 bps on these pairs).
-fee: 0.001
-slippage: 0.0003
+# Cost per unit of traded notional, split by side of the book. Roostoo spot:
+# 0.1% market (taker), 0.05% limit (maker). Shorts (/v6): 0.1% for both order
+# types. Market adds 3 bps slippage (spreads measured < 2 bps on these pairs).
+# Limit assumes the order fills at its price: optimistic if it never fills.
+costs:
+  market: {long: 0.0013, short: 0.0013}
+  limit: {long: 0.0005, short: 0.0010}
+cost_mode: limit
 
 # Defaults (the chosen parameter set). The sweep grid overrides these keys.
 params:

@@ -95,3 +95,26 @@ Open question for the contest: the rules list "long, sell, short, and
 close". If shorts are mandatory, use the 80/20 blend; if not, pure funding.
 Funding data: `fetch_data.py --funding` (Binance USD-M public endpoint).
 The live bot must pull funding from Binance too (Roostoo has none).
+
+## Limit-order costs (2026-10-02)
+Costs are now per side of the book (config.yaml `costs`): limit = 0.05% on
+long-side trades, 0.10% on short-side trades (Roostoo shorts pay 0.1% for
+any order type); market = 0.13% both. `compare.py --market` reproduces the
+earlier numbers exactly. Limit results, median composite IS / OOS:
+- funding_contra 72h long-only: +2.96 / +4.47 (was +2.68 / +4.07), still #1
+  among strategies that trade on >= 10 days (89% / 100% of windows).
+- funding_contra 72h long/short: +1.65 / +4.47 (shorts still lose IS).
+- xs_momentum 72h k=5: +0.90 / +0.87 (was +0.27 / -0.15): the only
+  price-only idea that turns positive in both periods, but weak.
+- trend: -0.89 / -0.38. vol_beta 168h L/S: +2.07 / -4.87 (still fails OOS).
+- zscore_mr 24h long-only: +1.70 / +0.91 (was -1.61 / -3.93), but total
+  return IS -32%: cheaper costs, still a loser over time.
+Cheaper fees help the high-turnover ideas most, but the ranking at the top
+does not change.
+
+Limit fill check (tmp script on 1m data, 2025-01 to 2026-09, daily 01:00 UTC
+order at the last 1m close, filled only if price trades strictly through):
+BTC/ETH/SOL/DOGE/ZEC/HBAR fill 88-94% within 5 min, 95-98% within 60 min.
+Unfilled orders saw price move 60-95 bps away within the hour, so a
+"limit, then market after 60 min" rule costs ~0.05% + ~0.03% = ~0.08% on
+average for long-side trades. Roostoo's mock matching may differ from Binance.

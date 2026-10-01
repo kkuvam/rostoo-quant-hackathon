@@ -7,6 +7,7 @@ columns are for checking, not for picking.
 
   uv run python roostoo_hackathon/compare.py                  # every candidate
   uv run python roostoo_hackathon/compare.py funding_contra   # just one family
+  uv run python roostoo_hackathon/compare.py --market         # taker costs, not limit
 """
 
 import itertools
@@ -16,7 +17,7 @@ import candidates as cand
 import logic
 import pandas as pd
 import yaml
-from vector_sweep import HERE, REPORT_DIR, fmt, load_closes, simulate, summarize
+from vector_sweep import HERE, REPORT_DIR, fmt, load_closes, simulate, summarize, trade_costs
 
 # Small grids on purpose: a few structural choices per idea, not a fit.
 GRIDS = {
@@ -61,8 +62,8 @@ SHOW = ["med_ret", "p10_ret", "pct_pos", "med_mdd", "med_comp_d", "pct_10days", 
         "total_ret", "turnover_yr", "avg_gross"]
 
 
-def run_all(close: pd.DataFrame, cfg: dict, names: list[str]) -> pd.DataFrame:
-    cost = cfg["fee"] + cfg["slippage"]
+def run_all(close: pd.DataFrame, cfg: dict, names: list[str], mode: str) -> pd.DataFrame:
+    cost = trade_costs(cfg, mode)
     base = {**BASE, "funding": load_funding(cfg, close.index)}
     rows = []
     for name in names:
@@ -85,14 +86,17 @@ def run_all(close: pd.DataFrame, cfg: dict, names: list[str]) -> pd.DataFrame:
 def main() -> None:
     cfg = yaml.safe_load((HERE / "config.yaml").read_text())
     close = load_closes(cfg)
-    names = sys.argv[1:] or list(GRIDS)
-    res = run_all(close, cfg, names)
+    picked = [a for a in sys.argv[1:] if not a.startswith("--")]
+    names = picked or list(GRIDS)
+    mode = "market" if "--market" in sys.argv else cfg["cost_mode"]
+    res = run_all(close, cfg, names, mode)
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
-    stem = "compare" if not sys.argv[1:] else "compare_" + "_".join(names)
+    stem = f"compare_{mode}" + ("_" + "_".join(picked) if picked else "")
     res.to_csv(REPORT_DIR / f"{stem}.csv", index=False)
     ins = res[["strategy"] + [f"is_{c}" for c in SHOW]]
     oos = res[["strategy"] + [f"oos_{c}" for c in SHOW]]
-    text = (f"Candidates, {cfg['window_days']}-day windows, OOS from {cfg['oos_start']}\n\n"
+    text = (f"Candidates, {cfg['window_days']}-day windows, OOS from {cfg['oos_start']}, "
+            f"{mode} orders, costs (long, short) {trade_costs(cfg, mode)}\n\n"
             f"In-sample:\n{fmt(ins)}\n\nOut-of-sample (same order):\n{fmt(oos)}\n")
     (REPORT_DIR / f"{stem}.txt").write_text(text)
     print(text)

@@ -3,7 +3,8 @@
 Not vectorbt signals: this is a multi-asset long/flat/short book with
 fractional weights, so a plain hourly simulation is clearer and has no
 hidden fill rules. Weights computed on bar t's close are held from bar
-t+1. Every change in weight pays fee + slippage on |delta|.
+t+1. Every change in weight pays the config's cost for that side of the
+book (limit or market orders, see config.yaml `costs`).
 
 Scoring: rolling 14-day windows (step 1 day), each scored with the
 contest's composite 0.4*Sortino + 0.3*Sharpe + 0.3*Calmar. Annualization
@@ -41,8 +42,19 @@ def load_closes(cfg: dict) -> pd.DataFrame:
     return close.reindex(full)
 
 
-def simulate(close: pd.DataFrame, weights: pd.DataFrame, p: dict, cost: float) -> dict:
-    """Hold `weights` row t from bar t+1, trading only on rebalance hours."""
+def trade_costs(cfg: dict, mode: str | None = None) -> tuple[float, float]:
+    """(long-side, short-side) cost per unit of traded notional for `mode` (market/limit)."""
+    c = cfg["costs"][mode or cfg["cost_mode"]]
+    return c["long"], c["short"]
+
+
+def simulate(close: pd.DataFrame, weights: pd.DataFrame, p: dict,
+             cost: tuple[float, float]) -> dict:
+    """Hold `weights` row t from bar t+1, trading only on rebalance hours.
+
+    Changes in long holdings pay cost[0], changes in short holdings pay cost[1]
+    (a flip from long to short pays both legs).
+    """
     targets = weights.reindex(columns=close.columns).fillna(0.0).to_numpy()
     rets = close.pct_change(fill_method=None).fillna(0.0).to_numpy()
     rebalance = (close.index.hour % p["rebalance_hours"] == 0)
@@ -61,9 +73,12 @@ def simulate(close: pd.DataFrame, weights: pd.DataFrame, p: dict, cost: float) -
             want = targets[t] * logic.drawdown_scale(eq, peak, p)
             delta = np.where(np.abs(want - held) >= p["band"], want - held, 0.0)
             delta = np.where((want == 0) & (held != 0), -held, delta)  # always fully exit
-            turnover[t] = np.abs(delta).sum()
-            eq *= 1.0 - turnover[t] * cost
-            held = held + delta
+            new = held + delta
+            long_traded = np.abs(np.maximum(new, 0.0) - np.maximum(held, 0.0)).sum()
+            short_traded = np.abs(np.minimum(new, 0.0) - np.minimum(held, 0.0)).sum()
+            turnover[t] = long_traded + short_traded
+            eq *= 1.0 - long_traded * cost[0] - short_traded * cost[1]
+            held = new
         equity[t] = eq
         held_hist[t] = held
     idx = close.index
@@ -132,7 +147,7 @@ def benchmark(close: pd.DataFrame, oos_start: str, days: int) -> list[dict]:
 
 
 def run_grid(close: pd.DataFrame, cfg: dict) -> pd.DataFrame:
-    cost = cfg["fee"] + cfg["slippage"]
+    cost = trade_costs(cfg)
     keys = list(cfg["grid"])
     rows = []
     for values in itertools.product(*(cfg["grid"][k] for k in keys)):
@@ -166,7 +181,7 @@ def main() -> None:
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     res.to_csv(REPORT_DIR / "sweep.csv", index=False)
     text = (f"{cfg['strategy_name']} sweep, {cfg['window_days']}-day rolling windows, "
-            f"cost {cfg['fee'] + cfg['slippage']:.4f}/side\n"
+            f"costs {cfg['cost_mode']} {trade_costs(cfg)} (long, short)\n"
             f"data {close.index[0]} -> {close.index[-1]}, OOS from {cfg['oos_start']}\n\n"
             f"In-sample (sorted by median daily-basis composite):\n{fmt(ins)}\n\n"
             f"Out-of-sample (same row order):\n{fmt(oos)}\n\n"
