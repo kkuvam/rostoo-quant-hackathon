@@ -6,7 +6,8 @@ month end). No API key, no rate-limit pagination. Roostoo's /USD prices track
 Binance's USDT pairs within ~2 bps (checked live 2026-10-01).
 
 Rerunning resumes from the first day of the last stored month, so it is cheap
-to refresh before a backtest or before the live bot starts.
+to refresh before a backtest or before the live bot starts. A --since earlier
+than the stored data backfills from that date instead.
 
   uv run python roostoo_hackathon/fetch_data.py --timeframe 1m
   uv run python roostoo_hackathon/fetch_data.py --timeframe 1h --symbols BTC ETH
@@ -65,7 +66,8 @@ def fetch_symbol(sym: str, tf: str, since: date, workers: int) -> Path:
     out = DATA_DIR / tf / f"{pair}.parquet"
     old = pd.read_parquet(out) if out.exists() else None
     start = since
-    if old is not None and len(old):
+    stored_from = pd.to_datetime(old["timestamp"].iloc[0], unit="ms").date() if old is not None else None
+    if stored_from is not None and since >= stored_from:  # resume; an earlier --since backfills
         start = pd.to_datetime(old["timestamp"].iloc[-1], unit="ms").date().replace(day=1)
     urls = archive_urls(pair, tf, start, datetime.now(UTC).date())
     with ThreadPoolExecutor(workers) as pool:

@@ -118,3 +118,26 @@ BTC/ETH/SOL/DOGE/ZEC/HBAR fill 88-94% within 5 min, 95-98% within 60 min.
 Unfilled orders saw price move 60-95 bps away within the hour, so a
 "limit, then market after 60 min" rule costs ~0.05% + ~0.03% = ~0.08% on
 average for long-side trades. Roostoo's mock matching may differ from Binance.
+
+## Chosen entry and long history (2026-10-02)
+User call: shorts not required -> funding_contra, 72h, long-only, limit
+costs. Data backfilled to 2020-06 (`fetch_data.py --since 2020-06-01`, also
+--funding); 15 of 21 coins exist in late 2020 (no SUI/WLD/ENA, NEAR/AAVE
+from mid-Oct 2020). Slots stay max_gross/21, so gross was lower in 2020.
+
+| Period | funding | EW hold | BTC hold |
+|---|---|---|---|
+| Sep 2020 | +0.6% (DD 4.3%) | -17.3% (DD 29.7%) | -8.6% |
+| Oct 2020 | +0.7% (DD 2.2%) | -2.3% | +27.6% |
+| Jan 2021 | +10.0% (DD 2.6%) | +152.6% | +15.6% |
+| 2022 | -31.8% (DD 43.9%) | -69.0% | -64.4% |
+| 2020-07 to 2026-09 | +123%, max DD 46.5% (2022-06) | +2170%, DD 77% | +780%, DD 77% |
+
+Whole period, 14-day windows: funding median +0.48%, positive 60%, median
+DD 3.9%, median composite +3.79 (EW +1.74, BTC +2.04), trades >= 10 days in
+81% of windows, average gross 0.37. Monthly: captures 25% of EW's up months
+and 32% of its down months. Jan 2021: market funding averaged 0.049%/8h
+(5x neutral) so it held ~7% gross through a +150% month.
+Character: a low-exposure, contrarian long book. Best risk-adjusted score
+per window of anything tested, but it cannot keep up in euphoric rallies,
+and it keeps buying through long bear markets (2022: -32%).
