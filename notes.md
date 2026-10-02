@@ -197,3 +197,29 @@ long-bear losses. Fear overlay +1 keeps the best whole-period composite
 (3.89) with the same tail gain as slot x1.5. At today's market funding
 (0.005%/8h) it sizes at 1.5x. Top 5/8 is the aggressive choice: p90
 +13-15%, but IS composite < 1 and 2022 -75%+. Trend tilts lose to both.
+
+## 2026-10-02 Cycle analogue: post-peak capitulation (2022)
+
+Macro view: Oct 2026 is 12 months after the Oct 2025 high, which matches Nov 2018.
+Binance perp funding starts Sep 2019, so 2018 cannot be tested with this signal.
+Nearest analogue in our data: Nov 2021 high, quiet Oct 2022, FTX capitulation
+Nov 2022. Same settings as above, limit costs. 14-day windows start daily
+2022-10-01 to 2022-12-17.
+
+| span | base | fear overlay +1 | top 8 | ew hold | btc hold |
+|---|---|---|---|---|---|
+| Oct 4-17 2022 | -0.6% | -1.2% | -2.4% | -3.0% | -1.2% |
+| Nov 6-20 2022 (FTX) | -15.4% | -23.9% | -34.0% | -30.5% | -23.7% |
+| Oct 2022 | +4.4% | +7.1% | +6.2% | +7.5% | +5.6% |
+| Nov 2022 | -5.6% | -9.9% | -23.3% | -17.7% | -17.0% |
+| Oct-Dec 2022 | -8.6% | -14.0% | -30.3% | -25.3% | -14.4% |
+| Jun 2022 (LUNA/3AC) | -22.6% | -31.6% | -31.0% | -30.6% | -39.6% |
+| 14d window median | -1.0% | -2.2% | -2.4% | -4.3% | |
+| 14d window worst | -13.9% | -21.6% | -31.8% | -28.0% | |
+| 14d window best | +11.4% | +19.1% | +19.2% | +21.9% | |
+
+Read: in a capitulation the base sizing loses least and beats BTC hold. The
+fear overlay scales up as funding turns negative in the crash, so it adds
+about half again to the loss. Top 8 loses as much as the basket. No variant
+makes money in the crash fortnight, so return rank there depends on the
+rest of the field losing more.
