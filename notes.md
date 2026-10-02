@@ -141,3 +141,32 @@ and 32% of its down months. Jan 2021: market funding averaged 0.049%/8h
 Character: a low-exposure, contrarian long book. Best risk-adjusted score
 per window of anything tested, but it cannot keep up in euphoric rallies,
 and it keeps buying through long bear markets (2022: -32%).
+
+## Exposure variants (2026-10-02)
+Same funding_contra 72h long-only, limit costs, band 0.0025. Weights x mult,
+then gross capped at 0.95. Median 14-day composite (all from 2020-07 /
+2020-23 / 2024-26Q1 / 2026-04+), 2022 total, Jan 2021 total:
+| variant | all | 2020-23 | IS | OOS | avg gross | 2022 | Jan 2021 |
+|---|---|---|---|---|---|---|---|
+| **base 1/21** | **3.77** | 3.97 | **2.91** | 4.17 | 0.38 | -32% | +10% |
+| slot x1.5 | 3.61 | 4.18 | 2.43 | 3.95 | 0.52 | -50% | +15% |
+| slot x2 | 3.37 | 3.89 | 1.99 | 4.14 | 0.59 | -61% | +20% |
+| slot x3 | 2.92 | 3.32 | 1.58 | 3.65 | 0.66 | -68% | +31% |
+| live coins (max_gross/n_live) | 3.76 | 4.10 | 2.91 | 4.17 | 0.40 | -38% | +12% |
+| scale 0.005% | 3.47 | 4.00 | 2.11 | 3.83 | 0.48 | -44% | +10% |
+| neutral 0.015% | 3.31 | 4.52 | 1.55 | 4.10 | 0.60 | -54% | +24% |
+| neutral 0.02% | 2.76 | 4.56 | 0.50 | 4.40 | 0.73 | -63% | +41% |
+| ew hold | 1.76 | 3.40 | -0.13 | 4.40 | 0.95 | -70% | +156% |
+
+14-day return tails (all windows from 2020-07): base p50 +0.5%, p75 +3.1%,
+p90 +7.3%, 16% of windows > +5%. slot x1.5: +0.7% / +4.3% / +10.1% / 22%.
+slot x2: +0.7% / +4.7% / +11.4% / 24%. neutral 0.015%: +1.0% / +5.0% /
++10.9% / 25%. ew hold: +0.9% / +10.6% / +21.1% / 38%.
+Read: more exposure moves the strategy toward EW hold. Composite falls
+in every step and 2022 losses grow, the upper tail rises. Live-coin sizing
+equals base today (all 21 coins have full history), its edge is 2020-only.
+The neutral shifts change the signal (coins at the default rate get a
+position), fall apart in 2024-26Q1 and were outside the robustness grid.
+All of 2020-26 was already seen, so this is in-sample selection.
+Decision: base 1/21 stays the default. slot x1.5 is the one knob to turn
+if the top-20 return gate needs more upside (p90 +7% -> +10%).
