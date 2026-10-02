@@ -196,19 +196,30 @@ the tail is real. It does not escape a sudden
 one-month crash (Jun 2026: -15% vs -17% for the market), and it lags strong
 rallies because it holds little when funding is high.
 
-## 7. Trading engine (in progress)
+## 7. Trading engine (`bot.py`)
 
-The live bot is being built. Design:
+```
+uv run python bot.py --dry-run   # targets and planned orders, places nothing
+uv run python bot.py             # run forever (deploy/roostoo-bot.service)
+```
 
-- **Schedule.** Runs hourly. At ~01:00 UTC each day it computes target weights
-  and rebalances. Other hours it only manages open orders and logs.
-- **State.** Read from Roostoo every run (balances, open orders), never from a
-  local file, so a restart cannot desync the book.
+- **Schedule.** Checks every minute. At 01:00 UTC each day it computes target
+  weights and places limit orders. 60 minutes later it cancels anything
+  unfilled and finishes the same targets with market orders.
+- **Signal.** The same steps as the backtest: last 72 hourly bars of Binance
+  funding, normalized to per-8h, forward-filled, averaged, then scored.
+  Settings live in the `live:` block of `config.yaml`.
+- **State.** Balances, prices and open orders are read from Roostoo on every
+  pass, so a restart cannot desync the book. `state.json` only records which
+  passes ran today; if it is lost the bot reruns a pass and the band stops
+  duplicate trades.
 - **Orders.** Signed Roostoo v3 REST calls (HMAC-SHA256 over sorted params).
-  Sells first to free cash, then buys. Limit orders at the last price,
-  cancelled and replaced by market orders after 60 minutes.
+  Sells first, then buys scaled to free USD. Quantities are floored to each
+  pair's AmountPrecision and checked against its minimum order value.
 - **Activity rule.** If no rebalance trade passes the band on a given day, the
-  bot places one small trade so the log shows activity every day.
+  bot buys about $20 of its largest target so every day shows a trade.
+- **Failures.** A failed pass is logged with its traceback to `logs/bot.log`
+  and retried a minute later.
 - **Data.** Funding from the public Binance futures API, prices from the
   Roostoo ticker.
 - **Hosting.** AWS EC2 in a non-US region (Binance blocks US IPs), under

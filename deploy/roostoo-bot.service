@@ -1,0 +1,15 @@
+# Copy to /etc/systemd/system/, then: sudo systemctl enable --now roostoo-bot
+[Unit]
+Description=Roostoo funding_contra bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/rostoo-quant-hackathon
+ExecStart=/home/ubuntu/.local/bin/uv run python bot.py
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

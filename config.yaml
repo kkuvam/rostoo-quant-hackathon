@@ -41,3 +41,13 @@ grid:
   lookbacks: [[168, 336, 720], [336, 720]]
   band: [0.01, 0.02]
   dd_limit: [0.0, 0.04]
+
+# Live bot (bot.py): funding_contra, long-only. Same values as the backtest.
+live:
+  funding_hours: 72      # average the last 72 hourly bars of per-8h funding
+  neutral: 0.0001        # 0.01%/8h: at or above this, no position
+  scale: 0.0001          # full slot at 0% funding or below
+  band: 0.0025           # skip a coin's trade if |target - held| < band of equity
+  rebalance_hour_utc: 1  # after the 00:00 UTC hourly bar closes
+  market_after_min: 60   # cancel unfilled limits, finish with market orders
+  activity_usd: 20       # forced trade size on a day with no rebalance trade
