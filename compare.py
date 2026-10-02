@@ -5,9 +5,9 @@ change, daily rebalance unless a grid says otherwise), same rolling 14-day
 windows. Ranked by in-sample median daily-basis composite; out-of-sample
 columns are for checking, not for picking.
 
-  uv run python roostoo_hackathon/compare.py                  # every candidate
-  uv run python roostoo_hackathon/compare.py funding_contra   # just one family
-  uv run python roostoo_hackathon/compare.py --market         # taker costs, not limit
+  uv run python compare.py                  # every candidate
+  uv run python compare.py funding_contra   # just one family
+  uv run python compare.py --market         # taker costs, not limit
 """
 
 import itertools

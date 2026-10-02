@@ -24,8 +24,8 @@ out-of-sample 2026-04-01 to 2026-10-01.
 Self-contained folder (no imports from the parent repo), so it can move to
 its own repo. Data and reports land in `data/` and `reports/` here (gitignored).
 ```
-uv run python roostoo_hackathon/fetch_data.py --timeframe 1h   # also 1m
-uv run python roostoo_hackathon/vector_sweep.py
+uv run python fetch_data.py --timeframe 1h   # also 1m
+uv run python vector_sweep.py
 ```
 Data: Binance bulk archive (data.binance.vision), 2024-01-01 to yesterday,
 1h and 1m. Archive 1h bars match the Binance API bars exactly (BTC, checked

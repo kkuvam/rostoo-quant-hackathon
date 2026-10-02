@@ -1,4 +1,4 @@
-"""Download Binance spot klines into roostoo_hackathon/data/<tf>/<SYM>USDT.parquet.
+"""Download Binance spot klines into data/<tf>/<SYM>USDT.parquet.
 
 Source is Binance's bulk archive (data.binance.vision): one zip per symbol per
 month, or per day for the current month (monthly files appear a few days after
@@ -9,8 +9,8 @@ Rerunning resumes from the first day of the last stored month, so it is cheap
 to refresh before a backtest or before the live bot starts. A --since earlier
 than the stored data backfills from that date instead.
 
-  uv run python roostoo_hackathon/fetch_data.py --timeframe 1m
-  uv run python roostoo_hackathon/fetch_data.py --timeframe 1h --symbols BTC ETH
+  uv run python fetch_data.py --timeframe 1m
+  uv run python fetch_data.py --timeframe 1h --symbols BTC ETH
 """
 
 import argparse
