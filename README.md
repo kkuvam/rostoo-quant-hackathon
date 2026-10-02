@@ -190,8 +190,8 @@ of any price signal lost most of its edge to fees.
 
 **Known weaknesses.** The strategy is smarter beta, not a hedge. It keeps
 buying through long bear markets: its two worst drawdowns were -46.6% (May
-2021 to Jun 2022) and -46.8% (Oct 2025 to Feb 2026), against roughly -75% for
-the equal-weight basket. Over a 14-day run the median drawdown is 4%, but
+2021 to Jun 2022) and -46.8% (Oct 2025 to Feb 2026), against -79% and -61%
+for the equal-weight basket in the same periods. Over a 14-day run the median drawdown is 4%, but
 the tail is real. It does not escape a sudden
 one-month crash (Jun 2026: -15% vs -17% for the market), and it lags strong
 rallies because it holds little when funding is high.
