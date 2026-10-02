@@ -170,3 +170,30 @@ position), fall apart in 2024-26Q1 and were outside the robustness grid.
 All of 2020-26 was already seen, so this is in-sample selection.
 Decision: base 1/21 stays the default. slot x1.5 is the one knob to turn
 if the top-20 return gate needs more upside (p90 +7% -> +10%).
+
+## Upside variants for the return gate (2026-10-02)
+Same base, band 0.0025, limit costs, gross capped at 0.95. Composite = median
+14-day (all from 2020-07 / IS / OOS), 14-day return tails over all windows
+from 2020-07, then month/year totals.
+- top k: equal max_gross/k in the k coins with the lowest 72h funding (below neutral).
+- trend tilt: slot x mult when the coin is above its 30d (720h) or 7d EMA.
+- fear overlay: slot x (1 + extra * clip((0.01% - market 72h funding) / 0.01%, 0, 1)).
+
+| variant | comp all | IS | OOS | p50 | p90 | >5% | >10% | gross | Jan21 | 2022 | Sep20 | Jun26 | Sep26 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| base | 3.77 | 2.91 | 4.17 | +0.5% | +7.3% | 17% | 5% | 0.38 | +10% | -32% | +1% | -15% | +14% |
+| slot x1.5 | 3.61 | 2.43 | 3.95 | +0.7% | +10.1% | 22% | 10% | 0.52 | +15% | -50% | +1% | -19% | +20% |
+| top 5 | 2.43 | 0.75 | 6.22 | +1.1% | +14.8% | 32% | 18% | 0.77 | +49% | -78% | +3% | -6% | +21% |
+| top 8 | 2.50 | 0.92 | 4.27 | +0.9% | +13.3% | 29% | 15% | 0.73 | +29% | -75% | +2% | -14% | +24% |
+| trend tilt 30d x2 | 2.50 | 1.63 | 4.32 | +0.5% | +9.4% | 20% | 9% | 0.48 | +19% | -43% | -1% | -18% | +23% |
+| trend tilt 30d x3 | 1.93 | 1.30 | 5.00 | +0.4% | +11.3% | 23% | 12% | 0.55 | +29% | -50% | -3% | -18% | +29% |
+| trend tilt 7d x2 | 2.11 | 1.58 | 2.76 | +0.3% | +10.1% | 20% | 10% | 0.49 | +18% | -52% | -1% | -19% | +19% |
+| **fear overlay +1** | **3.89** | 2.42 | 4.14 | +0.5% | +10.2% | 23% | 10% | 0.54 | +10% | -56% | +2% | -19% | +21% |
+| fear overlay +2 | 3.49 | 2.01 | 3.91 | +0.5% | +11.0% | 24% | 12% | 0.59 | +10% | -62% | +4% | -19% | +22% |
+| ew hold | 1.76 | -0.13 | 4.40 | +0.9% | +21.1% | 38% | 26% | 0.95 | +156% | -70% | -17% | -17% | +37% |
+
+Read: no free upside. Every variant that lifts p90 costs IS composite and
+long-bear losses. Fear overlay +1 keeps the best whole-period composite
+(3.89) with the same tail gain as slot x1.5. At today's market funding
+(0.005%/8h) it sizes at 1.5x. Top 5/8 is the aggressive choice: p90
++13-15%, but IS composite < 1 and 2022 -75%+. Trend tilts lose to both.
